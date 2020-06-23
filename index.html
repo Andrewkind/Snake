@@ -1,0 +1,890 @@
+<html>  
+    
+    <head>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+        </head>
+
+        <body>
+<div class="row snake-row" style="padding-top: 40px; visibility:hidden; margin: auto;">
+        <div class="col-md-12">
+            <canvas id="gameCanvas" style="border:1px solid #ffffff; z-index:1; background-color: black;"></canvas>
+            <button type="button" class="btn restart-button" style="z-index:2; position:absolute; top: 50%; left: 50%; border: black 1px solid;">Play</button>
+            <div style="z-index:2; position:absolute; top: 10%; left: 44%; color: white;">
+                Top Score: <strong><span class="topscore-label"></span></strong>
+            </div>
+            <div style="z-index:2; position:absolute; top: 10%; left: 3%; color: white;">
+                Score: <strong><span id="score-label"></span></strong>
+            </div>
+
+            <div class="keys-image" style="z-index:2; position:absolute; top: 10%; left: 3%; color: white;">
+                <img src="keysblack.png" class="img-fluid" height="100px">
+            </div>
+            
+        </div>
+    </div>
+</body>
+
+    </html>
+
+<script type="text/javascript">
+
+    //TODO:
+    // - Stop apples from spawning on top of snake
+    // - Add graphics to snake head and apples
+    // Create chat room
+    // Networking
+    //
+
+
+    $(".snake-button").on("click", function () {
+        console.log("click");
+       on()
+
+    });
+
+    function on() {
+        if ($(".snake-row").css("visibility") == "hidden") {
+            ctx.canvas.height = canvasHeight;
+
+            $(".snake-row").css("visibility", "visible");
+            $("html, body").animate({ scrollTop: $(document).height() }, "slow");
+
+            console.log("initializing game");
+
+        }
+        else {
+            ctx.canvas.height = 1;
+            $(".snake-row").css("visibility", "hidden");
+
+        }
+    }
+
+    $(".snake-button-up").on("click", function () {
+        up()
+        console.log("click");
+        
+    });
+
+    function up() {
+        if ($(".snake-row").css("visibility") == "hidden") {
+            ctx.canvas.height = canvasHeight;
+
+            $(".snake-row").css("visibility", "visible");
+            $("html, body").animate({ scrollTop: $(document).height() }, "slow");
+
+            console.log("initializing game");
+
+            //stop scroll on canvas
+            var fixed = document.getElementById('gameCanvas');
+
+            fixed.addEventListener('touchmove', function (e) {
+
+                e.preventDefault();
+
+            }, false);
+
+        }
+        else {
+            ctx.canvas.height = 1;
+            $(".snake-row").css("visibility", "hidden");
+
+        }
+
+    }
+
+    // BUGS
+    // - fix apple bug not being eaten from certain direction from snake.. (collision)
+    //
+    var w = window,
+    d = document,
+    e = d.documentElement,
+    g = d.getElementsByTagName('body')[0],
+    x = w.innerWidth || e.clientWidth || g.clientWidth,
+    y = w.innerHeight || e.clientHeight || g.clientHeight;
+
+    //var gameHeight = (400);
+    //var gameWidth = (600);
+
+    var gameHeight = (y * 0.8);
+    var gameWidth = (x * 0.8);
+
+    var startingApples = 15;
+    var startingInterval = "FAST"; //VERYSLOW/SLOW/MODERATE/FAST/VERYFAST
+    var snakeHeadColor = "Green";
+    var snakeBodyColor = "GreenYellow";
+
+    var appleColor = "Red";
+    var direction = "UP";
+    var previousDirection = "UP";
+    var headSize = "THICK"; // THIN/NORMAL/THICK
+    var startingPoint = { Y: ((gameHeight / 2) + 100), X: (gameWidth / 2) };
+    var snakeHead = { Y: 0, X: 0, Direction: "UP" };
+    var previousSnakeHead = { Y: 0, X: 0, Direction: "UP" };
+    var startingLength = 550;
+    var actualLength = startingLength;
+
+    var windowHeight = $(window).height();   // returns height of browser viewport
+    var windowWidth = $(document).height();
+
+
+    var canvasWidth = gameWidth;
+    var canvasHeight = gameHeight;
+    var bonusIncrease = 32;
+    var countDown;
+    // This list describes the Bonus Red pieces of Food on the Canvas
+    var bonusPoints = [];
+    var isGameOver = false;
+
+
+    // This list describes the body of the snake on the Canvas
+    var snakeBody = [];
+
+    var currentLength = 0;
+    var score = 0;
+    var topScore = 3420;
+
+    var rnd;
+    var canvas;
+    var applesEaten = 0;
+    var status = "Waiting To Init"
+    var paused = false;
+    var gameInterval = null;
+    var turnCooldownLimit;
+    var turnCooldown;
+    var canTurn = true;
+    var turned = "NONE";
+    
+
+    $(document).ready(function () {
+
+
+        $(".restart-button").on('click', function (e) {
+            InitializeGame();
+        });
+
+        StartKeyPressEvents();
+
+        //set top score
+        $(".topscore-label").text(topScore);
+
+        // Chat box enter keypress
+        $('#message').keypress(function (e) {
+            if (e.keyCode == 13)
+                $('#sendmessage').click();
+        });
+
+        canvas = document.getElementById('gameCanvas'), ctx = canvas.getContext('2d'), rect = {}, drag = false;
+        ctx.canvas.width = canvasWidth;
+        ctx.canvas.height = 1;
+        //InitializeGame();
+        $(".restart-button").show();
+
+        on();
+
+    });
+
+    function UpdateStatus(newStatus) {
+        status = newStatus;
+        $("#status-label").text(newStatus);
+
+    }
+
+    function GetSizeNumber(sizeName) {
+
+        var sizeNumber = "";
+
+        switch (sizeName) {
+            case "THIN":
+                sizeNumber = 4;
+                break;
+            case "NORMAL":
+                sizeNumber = 8;
+                break;
+            case "THICK":
+                sizeNumber = 16;
+                break;
+            default:
+                console.log("Error: GetSize - Hit switch default. sizeName: " + sizeName + " ");
+                sizeNumber = 4;
+
+        }
+        return sizeNumber;
+    }
+
+    function GetDirectionNumber(directionName) {
+
+        var directionNumber = "";
+
+        switch (directionName) {
+            case "UP":
+                directionNumber = 8;
+                break;
+            case "DOWN":
+                directionNumber = 2;
+                break;
+            case "LEFT":
+                directionNumber = 4;
+                break;
+            case "RIGHT":
+                directionNumber = 6;
+                break;
+            default:
+                console.log("Error: GetMovingDirection - Hit switch default. directionName: " + directionName + " ");
+                directionNumber = 4;
+
+        }
+        return directionNumber;
+    }
+
+    function GetTimeIntervalNumber(timeName) {
+
+        var timeNumber = "";
+
+        switch (timeName) {
+            case "VERYFAST":
+                timeNumber = 2;
+                break;
+            case "FAST":
+                timeNumber = 10;
+                break;
+            case "MODERATE":
+                timeNumber = 17;
+                break;
+            case "SLOW":
+                timeNumber = 100;
+                break;
+            case "VERYSLOW":
+                timeNumber = 200;
+                break;
+            default:
+                console.log("Error: GetTimeSpan - Hit switch default. timeName: " + timeName + " ");
+                timeNumber = 10000;
+
+        }
+        return timeNumber;
+    }
+
+
+    function InitializeGame() {
+
+        UpdateStatus("Initializing...");
+        direction = "UP";
+        headSize = "THICK";
+        isGameOver = false;
+        paused = false;
+        actualLength = startingLength;
+        canTurn = true;
+        applesEaten = 0;
+        turned = "NONE";
+        //startingInterval = "VERYFAST";
+        turnCooldownLimit = GetSizeNumber(headSize) + 1;
+        turnCooldown = turnCooldownLimit;
+        snakeHead.X = startingPoint.X;
+        snakeHead.Y = startingPoint.Y;
+
+        previousSnakeHead.X = snakeHead.X;
+        previousSnakeHead.Y = snakeHead.X;
+        previousSnakeHead.Direction = snakeHead.Direction;
+        score = 0;
+        currentLength = 0;
+        bonusPoints = [];
+        snakeBody = [];
+
+        //hide restart button
+        $(".restart-button").hide();
+
+        //hide keys img
+        $(".keys-image").hide();
+
+
+        //Swipe Detection
+        document.addEventListener('touchstart', handleTouchStart, false);
+        document.addEventListener('touchmove', handleTouchMove, false);
+
+        var xDown = null;
+        var yDown = null;
+
+        function handleTouchStart(evt) {
+            xDown = evt.touches[0].clientX;
+            yDown = evt.touches[0].clientY;
+        };
+
+        function handleTouchMove(evt) {
+            if (!xDown || !yDown) {
+                return;
+            }
+
+            var xUp = evt.touches[0].clientX;
+            var yUp = evt.touches[0].clientY;
+
+            var xDiff = xDown - xUp;
+            var yDiff = yDown - yUp;
+
+            if (Math.abs(xDiff) > Math.abs(yDiff)) {/*most significant*/
+                if (xDiff > 0) {
+                    /* left swipe */
+                    if (previousDirection != "RIGHT") {
+                        turned = "LEFT";
+                    }
+
+                } else {
+                    /* right swipe */
+                    if (previousDirection != "LEFT") {
+                        turned = "RIGHT";
+                    }
+                }
+            } else {
+                if (yDiff > 0) {
+                    /* up swipe */
+                    if (previousDirection != "DOWN") {
+                        turned = "UP";
+                    }
+
+                } else {
+                    /* down swipe */
+                    if (previousDirection != "UP") {
+                        turned = "DOWN";
+                    }
+
+                }
+            }
+            /* reset values */
+            xDown = null;
+            yDown = null;
+        };
+
+
+        //   Instantiate Food Objects
+        InstantiateFood(startingApples);
+
+
+       // countDown = 3;
+        BeginGame();
+
+
+    }
+
+    function BeginGame() {
+        var timeInterval = GetTimeIntervalNumber(startingInterval);
+        gameInterval = setInterval(Update, timeInterval);
+    
+        //create timer
+
+
+    }
+
+    function InstantiateFood(foodCount) {
+
+        var n;
+        for (n = 0; n < foodCount; n++) {
+            var randomX = Math.floor(Math.random() * (canvasWidth - 100)) + 50;
+            var randomY = Math.floor(Math.random() * (canvasHeight - 100)) + 50;
+            var bonusPoint = { Y: randomY, X: randomX };
+            bonusPoints.push(bonusPoint);
+        }
+
+        //Add apple images
+        // clear first, later change this to clear only the apple eaten
+        //   ctx.clearRect(0, 0, gameCanvas.width, gameCanvas.height);
+
+        //var imageObj = new Image();
+
+        //imageObj.onload = function () {
+        //    for (var i = 0; i < bonusPoints.length; i++) {
+        //        ctx.drawImage(this, bonusPoints[i].X, bonusPoints[i].Y);
+        //    }
+        //};
+
+        //imageObj.src = "/content/images/apple.png";
+    }
+
+    var frameCount = 0;
+    function Update() {
+        frameCount = frameCount + 1;
+
+        if (paused) {
+            return;
+        }
+
+        if (turnCooldown > 0) {
+            canTurn = false;
+            turnCooldown--;
+        }
+        else {
+            canTurn = true;
+        }
+
+        if (canTurn) {
+            switch (turned) {
+                case "LEFT":
+                    turnCooldown = turnCooldownLimit;
+                    direction = "LEFT";
+                    snakeHead.Direction = direction;
+                    if (previousDirection == "UP") {
+                        snakeHead.Y += 1;
+                    } else if (previousDirection == "DOWN") {
+                        snakeHead.Y -= GetSizeNumber(headSize);
+                        snakeHead.X += 1;
+
+                    }
+                    previousSnakeHead.X = snakeHead.X;
+                    previousSnakeHead.Y = snakeHead.Y;
+                    break;
+                case "RIGHT":
+                    snakeHead.Direction = direction;
+                    turnCooldown = turnCooldownLimit;
+                    direction = "RIGHT";
+                    snakeHead.Direction = direction;
+                    if (previousDirection == "UP") {
+                        snakeHead.Y += 1;
+                        snakeHead.X += GetSizeNumber(headSize);
+
+                    }
+                    else if (previousDirection == "DOWN") {
+                        snakeHead.X += GetSizeNumber(headSize);
+                        snakeHead.Y -= GetSizeNumber(headSize);
+
+                    }
+                    previousSnakeHead.X = snakeHead.X;
+                    previousSnakeHead.Y = snakeHead.Y;
+                    break;
+                case "UP":
+                    turnCooldown = turnCooldownLimit;
+                    direction = "UP";
+                    snakeHead.Direction = direction;
+                    if (previousDirection == "RIGHT") {
+                        snakeHead.X -= GetSizeNumber(headSize);
+                    } else if (previousDirection == "LEFT") {
+                        snakeHead.X += 1;
+                    }
+                    previousSnakeHead.X = snakeHead.X;
+                    previousSnakeHead.Y = snakeHead.Y;
+                    break;
+                case "DOWN":
+                    turnCooldown = turnCooldownLimit;
+                    direction = "DOWN";
+                    snakeHead.Direction = direction;
+                    if (previousDirection == "RIGHT") {
+                        snakeHead.X -= GetSizeNumber(headSize);
+                        snakeHead.Y += GetSizeNumber(headSize);
+
+                    }
+                    else if (previousDirection == "LEFT") {
+                        snakeHead.X += 1;
+                        snakeHead.Y += GetSizeNumber(headSize);
+
+                    }
+                    previousSnakeHead.X = snakeHead.X;
+                    previousSnakeHead.Y = snakeHead.Y;
+                    break;
+                case "NONE":
+                    break;
+                default:
+                    console.log("Error: Turn - Hit switch default. Turned: " + turned + " ");
+
+                    break;
+            }
+            turned = "NONE";
+        }
+        previousDirection = direction;
+
+
+        UpdateLabels();
+        ctx.clearRect(0, 0, gameCanvas.width, gameCanvas.height);
+
+        PaintSnake();
+
+        // Expand the body of the snake to the direction of movement
+        switch (direction) {
+            case "UP":
+                previousSnakeHead.Direction = "UP";
+                previousSnakeHead.Y = snakeHead.Y;
+                snakeHead.Y -= 1;
+                break;
+            case "DOWN":
+                previousSnakeHead.Direction = "DOWN";
+                previousSnakeHead.Y = snakeHead.Y;
+                snakeHead.Y += 1;
+                break;
+            case "LEFT":
+                previousSnakeHead.Direction = "LEFT";
+                previousSnakeHead.X = snakeHead.X;
+                snakeHead.X -= 1;
+                break;
+            case "RIGHT":
+
+
+                previousSnakeHead.Direction = "RIGHT";
+                previousSnakeHead.X = snakeHead.X;
+                snakeHead.X += 1;
+                break;
+            default:
+                console.log("Error: Update - Hit switch default. direction: " + direction + " ");
+        }
+        CollideBoundaryCheck();
+        CollideBonusCheck();
+        CollideSnakeCheck();
+
+        //Increment snake length
+        if (currentLength < actualLength) {
+            currentLength = currentLength + 1;
+            if (currentLength > actualLength) {
+                currentLength = actualLength;
+            }
+        }
+        // Add new pixel to snake body array if needed
+        if (snakeBody.length < currentLength) {
+            if (currentLength == 1) {
+                var dir = direction;
+                var pixel = { X: 0, Y: 0, Direction: "" };
+                pixel.X = previousSnakeHead.X;
+                pixel.Y = previousSnakeHead.Y;
+                pixel.Direction = snakeHead.Direction;
+
+                snakeBody.push(pixel);
+
+            } else {
+                var lastBodyPixel = snakeBody[snakeBody.length - 1];
+                // need to add one extra snake body pixel
+                $("#snakeBody-eaten-label").text(lastBodyPixel.Y);
+                var pixel = { X: 0, Y: 0, Direction: "" };
+                pixel.X = previousSnakeHead.X;
+                pixel.Y = previousSnakeHead.Y;
+                pixel.Direction = lastBodyPixel.Direction;
+                snakeBody.push(pixel);
+            }
+        }
+
+        // update snake positions
+        var i;
+        var previousBodyPixel = {};
+        var newBodyPixel = {};
+        for (i = 0; i < snakeBody.length; i++) {
+
+            if (i == 0) {
+                snakeBody[i].X = previousSnakeHead.X;
+                snakeBody[i].Y = previousSnakeHead.Y;
+                snakeBody[i].Direction = previousSnakeHead.Direction;
+                previousBodyPixel.X = previousSnakeHead.X;
+                previousBodyPixel.Y = previousSnakeHead.Y;
+                previousBodyPixel.Direction = previousSnakeHead.Direction;
+
+            }
+            else {
+                newBodyPixel.X = snakeBody[i].X;
+                newBodyPixel.Y = snakeBody[i].Y;
+                newBodyPixel.Direction = snakeBody[i].Direction;
+
+                snakeBody[i].X = previousBodyPixel.X;
+                snakeBody[i].Y = previousBodyPixel.Y;
+                snakeBody[i].Direction = previousBodyPixel.Direction;
+
+                previousBodyPixel.X = newBodyPixel.X;
+                previousBodyPixel.Y = newBodyPixel.Y;
+                previousBodyPixel.Direction = newBodyPixel.Direction;
+
+
+            }
+        }
+    }
+
+    function PaintSnake() {
+        /* This method is used to paint a frame of the snake´s body
+         * each time it is called. */
+        PaintSnakeBody();
+        PaintSnakeHead();
+
+    }
+
+    function PaintSnakeBody() {
+        // Paint snake body
+
+        var width;
+        var height;
+        var i;
+
+        for (i = 0; i < snakeBody.length; i++) {
+
+            //draw pixel
+            ctx.fillStyle = snakeBodyColor;
+
+            var x = snakeBody[i].X;
+            var y = snakeBody[i].Y;
+            var bodyDirection = snakeBody[i].Direction;
+            if (bodyDirection == "UP" || bodyDirection == "DOWN") {
+                width = GetSizeNumber(headSize);
+                height = 1;
+            }
+            else if (bodyDirection == "LEFT" || bodyDirection == "RIGHT") {
+                width = 1;
+                height = GetSizeNumber(headSize);
+            }
+
+
+            ctx.fillRect(x, y, width, height);
+        }
+    }
+
+    function PaintSnakeHead() {
+
+        var width;
+        var height;
+        // Paint snake Head
+        ctx.fillStyle = snakeHeadColor;
+
+        if (direction == "LEFT" || direction == "RIGHT") {
+            width = 1;
+            height = GetSizeNumber(headSize);
+
+        } else if (direction == "UP" || direction == "DOWN") {
+
+            width = GetSizeNumber(headSize);
+            height = 1;
+        }
+
+        ctx.fillRect(snakeHead.X, snakeHead.Y, width, height);
+    }
+
+    function PaintBonus(index) {
+
+
+        ctx.fillStyle = appleColor;
+
+        var width = GetSizeNumber(headSize);
+        var height = GetSizeNumber(headSize);
+
+        ctx.fillRect(bonusPoints[index].X, bonusPoints[index].Y, width, height);
+        //var apple_image = new Image();
+        //apple_image.src = '/content/images/apple.png';
+        //apple_image.onload = function () {
+        //    ctx.drawImage(apple_image, bonusPoints[index].X, bonusPoints[index].Y);
+        //}
+
+
+    }
+
+    function CollideBonusCheck() {
+        // Hitting a bonus Point causes the lengthen-Snake Effect
+
+        var i;
+        for (i = 0; i < bonusPoints.length; i++) {
+            PaintBonus(i);
+
+            var point = bonusPoints[i];
+
+            // Check if head collided with apple
+            var x = Math.abs(point.X - snakeHead.X);
+            var y = Math.abs(point.Y - snakeHead.Y);
+            var height, width;
+            if (direction == "UP" || direction == "DOWN") {
+                height = 1;
+                width = GetSizeNumber(headSize)
+            }
+            else if (direction == "LEFT" || direction == "RIGHT") {
+                height = GetSizeNumber(headSize);
+                width = 1;
+            }
+
+            if (direction == "LEFT") {
+                width = GetSizeNumber(headSize);
+            }
+
+            if (direction == "UP") {
+                height = GetSizeNumber(headSize);
+            }
+            if ((x < width) &&
+            (y < height)) {
+                actualLength += bonusIncrease;
+                score += bonusIncrease;
+                applesEaten++;
+                bonusPoints.splice(i, 1);
+                InstantiateFood(1);
+                break;
+
+            }
+
+        }
+    }
+
+    function CollideBoundaryCheck() {
+        // Restrict to boundaries of the Canvas
+        if ((snakeHead.X < 5) || (snakeHead.X > canvasWidth) ||
+            (snakeHead.Y < 5) || (snakeHead.Y > canvasHeight)) {
+            GameOver();
+            snakeHead.X = startingPoint.X;
+            snakeHead.Y = startingPoint.Y;
+
+            previousSnakeHead.X = snakeHead.X;
+            previousSnakeHead.Y = snakeHead.Y;
+        }
+    }
+
+    function CollideSnakeCheck() {
+        var i;
+        for (i = 0; i < snakeBody.length; i++) {
+            var point = snakeBody[i];
+
+            if (snakeHead.Direction == "UP" || snakeHead.Direction == "DOWN") {
+
+                if (point.Direction == "LEFT" || point.Direction == "RIGHT") {
+
+                    var pointY = snakeHead.Direction == "UP" ? point.Y + GetSizeNumber(headSize) : point.Y;
+
+                    var x = Math.abs(point.X - snakeHead.X);
+                    var y = Math.abs(pointY - snakeHead.Y);
+
+                    if (x < 1 && y < 1) {
+                        GameOver();
+                        console.log("Collision i: " + i + " x: " + x + " y: " + y + " snakeHead.Direction: " + snakeHead.Direction);
+                    }
+                }
+                else if (point.Direction == "UP" || point.Direction == "DOWN") {
+                    var pointY = snakeHead.Direction == "UP" ? point.Y + GetSizeNumber(headSize) : point.Y;
+
+                    var x = Math.abs(point.X - snakeHead.X);
+                    var y = Math.abs(point.Y - snakeHead.Y);
+
+                    if (x < GetSizeNumber(headSize) && y < 1) {
+                        console.log("Collision i: " + i + " x: " + x + " y: " + y + " snakeHead.Direction: " + snakeHead.Direction);
+                        GameOver();
+                    }
+                }
+
+
+            }
+            else if (snakeHead.Direction == "LEFT" || snakeHead.Direction == "RIGHT") {
+                if (point.Direction == "UP" || point.Direction == "DOWN") {
+
+                    var pointX = snakeHead.Direction == "RIGHT" ? point.X : point.X + GetSizeNumber(headSize);
+
+                    var x = Math.abs(pointX - snakeHead.X);
+                    var y = Math.abs(point.Y - snakeHead.Y);
+
+                    if (x < 1 && y < 1) {
+                        console.log("Collision i: " + i + " x: " + x + " y: " + y + " snakeHead.Direction: " + snakeHead.Direction);
+                        GameOver();
+
+                    }
+                }
+                if (point.Direction == "LEFT" || point.Direction == "RIGHT") {
+
+                    var pointX = snakeHead.Direction == "RIGHT" ? point.X : point.X + GetSizeNumber(headSize);
+                    var pointY = point.Y - GetSizeNumber(headSize);
+                    var x = Math.abs(point.X - snakeHead.X);
+                    var y = Math.abs(point.Y - snakeHead.Y);
+
+                    if (x < 1 && y < GetSizeNumber(headSize)) {
+                        console.log("Collision i: " + i + " x: " + x + " y: " + y + " snakeHead.Direction: " + snakeHead.Direction);
+                        GameOver();
+                    }
+                }
+            }
+
+        }
+    }
+
+    function StartKeyPressEvents() {
+        $(document).keydown(function (e) {
+
+            switch (e.which) {
+                case 65: // a
+                case 37: // left
+                    if (previousDirection != "RIGHT") {
+                        turned = "LEFT";
+                        //direction = "LEFT";
+                        //if (previousDirection == "DOWN") {
+                        //    var i;
+                        //    for (i = 0; i < snakeBody.length; i++) {
+                        //        snakeBody[i].Y += GetSizeNumber(headSize);
+                        //    }
+                        //}
+
+                    }
+                    break;
+                case 87:
+                case 38: // up
+                    if (previousDirection != "DOWN") {
+
+                        turned = "UP";
+
+                        //direction = "UP";
+
+                    }
+
+                    break;
+                case 68:
+                case 39: // right
+                    if (previousDirection != "LEFT") {
+                        turned = "RIGHT";
+                    } break;
+
+                case 83:
+                case 40: // down
+                    if (previousDirection != "UP") {
+                        turned = "DOWN";
+                    }
+                    break;
+                case 80: // 'p'
+                    paused = !paused;
+                    if (paused) {
+                        UpdateStatus("Game Paused.");
+
+                    } else {
+                        UpdateStatus("Game Resumed.");
+                    }
+                    break;
+
+                default: return; // exit this handler for other keys
+            }
+
+            e.preventDefault(); // prevent the default action (scroll / move caret)
+        });
+
+    }
+    function GameOver() {
+        // console.log("It's game over man, game over..");
+        UpdateStatus("Game Over");
+        isGameOver = true;
+        clearInterval(gameInterval);
+        paused = true;
+
+        //show restart button and keys image
+        $(".restart-button").show();
+        $(".keys-image").show();
+
+        //check if you beat high score
+        if (score > topScore) {
+            $(".topscore-label").text(score);
+        }
+
+    }
+
+    function UpdateLabels() {
+        $("#snakeHeadX").text(snakeHead.X);
+        $("#snakeHeadY").text(snakeHead.Y);
+        $("#status-label").text(status);
+        $("#score-label").text(score);
+        $("#length-label").text(currentLength);
+        $("#apples-eaten-label").text(applesEaten);
+        $("#turnCooldown-label").text(turnCooldown);
+
+    }
+</script>
+
+
+<style>
+
+
+    .features {
+        padding-top: 20px;
+    }
+
+        .restart-button {
+            background-color: chartreuse;
+    }
+
+        .snake-button
+    {position:absolute; bottom:0; right:0;}
+
+
+</style>
