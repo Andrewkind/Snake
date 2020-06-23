@@ -9,10 +9,10 @@
         <div class="col-md-12">
             <canvas id="gameCanvas" style="border:1px solid #ffffff; z-index:1; background-color: black;"></canvas>
             <button type="button" class="btn restart-button" style="z-index:2; position:absolute; top: 50%; left: 50%; border: black 1px solid;">Play</button>
-            <div style="z-index:2; position:absolute; top: 10%; left: 44%; color: white;">
+            <div style="z-index:2; position:absolute; top: 10%; left: 3%; color: white;">
                 Top Score: <strong><span class="topscore-label"></span></strong>
             </div>
-            <div style="z-index:2; position:absolute; top: 10%; left: 3%; color: white;">
+            <div style="z-index:2; position:absolute; top: 10%; left: 44%; color: white;">
                 Score: <strong><span id="score-label"></span></strong>
             </div>
 
@@ -109,7 +109,7 @@
     var gameWidth = (x * 0.8);
 
     var startingApples = 15;
-    var startingInterval = "FAST"; //VERYSLOW/SLOW/MODERATE/FAST/VERYFAST
+    var startingInterval = "VERYFAST"; //VERYSLOW/SLOW/MODERATE/FAST/VERYFAST
     var snakeHeadColor = "Green";
     var snakeBodyColor = "GreenYellow";
 
@@ -129,7 +129,7 @@
 
     var canvasWidth = gameWidth;
     var canvasHeight = gameHeight;
-    var bonusIncrease = 32;
+    var bonusIncrease = 160;
     var countDown;
     // This list describes the Bonus Red pieces of Food on the Canvas
     var bonusPoints = [];
@@ -141,7 +141,7 @@
 
     var currentLength = 0;
     var score = 0;
-    var topScore = 3420;
+    var topScore = 19420;
 
     var rnd;
     var canvas;
@@ -874,6 +874,10 @@
 
 <style>
 
+    html, body {
+        position: fixed;
+        overflow: hidden;
+    }
 
     .features {
         padding-top: 20px;
