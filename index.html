@@ -179,9 +179,15 @@
         //InitializeGame();
         $(".restart-button").show();
 
-        setTimeout(function(){         on }, 1000);
+        setTimeout(function(){         timerSet }, 1000);
 
     });
+
+    function timerSet() {
+        
+        on();
+        alert("begin");
+    }
 
     function UpdateStatus(newStatus) {
         status = newStatus;
