@@ -156,7 +156,23 @@
     
 
     $(document).ready(function () {
+         w = window;
+    d = document;
+    e = d.documentElement;
+    g = d.getElementsByTagName('body')[0];
+        x = w.innerWidth || e.clientWidth || g.clientWidth;
+    y = w.innerHeight || e.clientHeight || g.clientHeight;
 
+    //var gameHeight = (400);
+    //var gameWidth = (600);
+
+    var gameHeight = (y * 0.8);
+    var gameWidth = (x * 0.8);
+
+         startingPoint = { Y: ((gameHeight / 2) + 100), X: (gameWidth / 2) };
+
+         canvasWidth = gameWidth;
+     canvasHeight = gameHeight;
 
         $(".restart-button").on('click', function (e) {
             InitializeGame();
