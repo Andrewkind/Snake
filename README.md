@@ -1,5 +1,5 @@
 # Snake
-Snake - JavaScript game!
+Snake - JavaScript game
 
 Play at https://andrewkind.github.io/Snake/
 
