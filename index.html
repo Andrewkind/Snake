@@ -1,16 +1,24 @@
-<html style="position: relative;">  
-    
-    <head>
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-        </head>
+<html style="position: relative;">
 
-        <body style="position: relative;">
-<div class="row snake-row" style="padding-top: 40px; visibility:hidden; margin: auto;">
+<head>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+</head>
+
+<body style="position: relative;">
+    <div class="row snake-row" style="padding-top: 40px; visibility:hidden; margin: auto;">
         <div class="col-md-12" style="display: flex; justify-content: center;">
             <canvas id="gameCanvas" style="border:1px solid #ffffff; z-index:1; background-color: black;"></canvas>
-            <button type="button" class="btn restart-button-med restart-button" style="padding: 0; width: 100px; height: 100px; border-radius: 50%; z-index:2; position:absolute; top: 50%; left: 40%; border: black 1px solid;  font-size: 24px;">MED</button>
- <button type="button" class="btn restart-button-hard restart-button" style="padding: 0; width: 100px; height: 100px; border-radius: 50%; z-index:2; position:absolute; top: 50%; left: 60%; border: black 1px solid;  font-size: 24px;">HARD</button>
- <button type="button" class="btn restart-button-easy restart-button" style="padding: 0; width: 100px; height: 100px; border-radius: 50%; z-index:2; position:absolute; top: 50%; left: 20%; border: black 1px solid;  font-size: 24px;">EASY</button>
+
+            <div class="buttons" style="display: flex;"> <button type="button" class="btn restart-button-med restart-button"
+                    style="padding: 0; width: 100px; height: 100px; border-radius: 50%; z-index:2; position:absolute; top: 50%; left: 50%; border: black 1px solid;  font-size: 24px;">MED</button>
+                <button type="button" class="btn restart-button-hard restart-button"
+                    style="padding: 0; width: 100px; height: 100px; border-radius: 50%; z-index:2; position:absolute; top: 50%; left: 65%; border: black 1px solid;  font-size: 24px;">HARD</button>
+                <button type="button" class="btn restart-button-easy restart-button"
+                    style="padding: 0; width: 100px; height: 100px; border-radius: 50%; z-index:2; position:absolute; top: 50%; left: 35%; border: black 1px solid;  font-size: 24px;">EASY</button>
+            </div>
+
+
+
             <div style="z-index:2; position:absolute; top: 10%; left: 3%; color: white;">
                 Top Score: <strong><span class="topscore-label"></span></strong>
             </div>
@@ -21,12 +29,12 @@
             <div class="keys-image" style="z-index:2; position:absolute; top: 10%; left: 12%; color: white;">
                 <img src="keysblack.png" class="img-fluid" height="100px">
             </div>
-            
+
         </div>
     </div>
 </body>
 
-    </html>
+</html>
 
 <script type="text/javascript">
 
@@ -40,7 +48,7 @@
 
     $(".snake-button").on("click", function () {
         console.log("click");
-       on()
+        on()
 
     });
 
@@ -64,7 +72,7 @@
     $(".snake-button-up").on("click", function () {
         up()
         console.log("click");
-        
+
     });
 
     function up() {
@@ -98,11 +106,11 @@
     // - fix apple bug not being eaten from certain direction from snake.. (collision)
     //
     var w = window,
-    d = document,
-    e = d.documentElement,
-    g = d.getElementsByTagName('body')[0],
-    x = w.innerWidth || e.clientWidth || g.clientWidth,
-    y = w.innerHeight || e.clientHeight || g.clientHeight;
+        d = document,
+        e = d.documentElement,
+        g = d.getElementsByTagName('body')[0],
+        x = w.innerWidth || e.clientWidth || g.clientWidth,
+        y = w.innerHeight || e.clientHeight || g.clientHeight;
 
     //var gameHeight = (400);
     //var gameWidth = (600);
@@ -155,43 +163,43 @@
     var turnCooldown;
     var canTurn = true;
     var turned = "NONE";
-    
+
 
     $(document).ready(function () {
-         w = window;
-    d = document;
-    e = d.documentElement;
-    g = d.getElementsByTagName('body')[0];
+        w = window;
+        d = document;
+        e = d.documentElement;
+        g = d.getElementsByTagName('body')[0];
         x = w.innerWidth || e.clientWidth || g.clientWidth;
-    y = w.innerHeight || e.clientHeight || g.clientHeight;
+        y = w.innerHeight || e.clientHeight || g.clientHeight;
 
-    //var gameHeight = (400);
-    //var gameWidth = (600);
+        //var gameHeight = (400);
+        //var gameWidth = (600);
 
-    var gameHeight = (y * 0.9);
-    var gameWidth = (x * 0.9);
+        var gameHeight = (y * 0.9);
+        var gameWidth = (x * 0.9);
 
-         startingPoint = { Y: ((gameHeight / 2) + 100), X: (gameWidth / 2) };
+        startingPoint = { Y: ((gameHeight / 2) + 100), X: (gameWidth / 2) };
 
-         canvasWidth = gameWidth;
-     canvasHeight = gameHeight;
+        canvasWidth = gameWidth;
+        canvasHeight = gameHeight;
 
-    startingInterval = "MODERATE"; //VERYSLOW/SLOW/MODERATE/FAST/VERYFAST
+        startingInterval = "MODERATE"; //VERYSLOW/SLOW/MODERATE/FAST/VERYFAST
 
 
         $(".restart-button-easy").on('click', function (e) {
-		startingInterval = "MODERATE"
+            startingInterval = "MODERATE"
             InitializeGame();
         });
 
-	$(".restart-button-med").on('click', function (e) {
-	startingInterval = "FAST"
+        $(".restart-button-med").on('click', function (e) {
+            startingInterval = "FAST"
             InitializeGame();
         });
 
-	$(".restart-button-hard").on('click', function (e) {
-        startingInterval = "VERYFAST"    
-	InitializeGame();
+        $(".restart-button-hard").on('click', function (e) {
+            startingInterval = "VERYFAST"
+            InitializeGame();
         });
 
         StartKeyPressEvents();
@@ -217,9 +225,9 @@
     });
 
     function timerSet() {
-        
+
         on();
-     //   alert("begin");
+        //   alert("begin");
     }
 
     function UpdateStatus(newStatus) {
@@ -400,7 +408,7 @@
         InstantiateFood(startingApples);
 
 
-       // countDown = 3;
+        // countDown = 3;
         BeginGame();
 
 
@@ -409,7 +417,7 @@
     function BeginGame() {
         var timeInterval = GetTimeIntervalNumber(startingInterval);
         gameInterval = setInterval(Update, timeInterval);
-    
+
         //create timer
 
 
@@ -735,7 +743,7 @@
                 height = GetSizeNumber(headSize);
             }
             if ((x < width) &&
-            (y < height)) {
+                (y < height)) {
                 actualLength += bonusIncrease;
                 score += bonusIncrease;
                 applesEaten++;
@@ -918,8 +926,8 @@
 
 
 <style>
-
-    html, body {
+    html,
+    body {
         position: fixed;
         overflow: hidden;
     }
@@ -928,18 +936,21 @@
         padding-top: 20px;
     }
 
-        .restart-button-med {
-            background-color: chartreuse;
-    }
- .restart-button-hard {
-            background-color: red;
-    }
- .restart-button-easy {
-            background-color: aqua;
+    .restart-button-med {
+        background-color: chartreuse;
     }
 
-        .snake-button
-    {position:absolute; bottom:0; right:0;}
+    .restart-button-hard {
+        background-color: red;
+    }
 
+    .restart-button-easy {
+        background-color: aqua;
+    }
 
+    .snake-button {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+    }
 </style>
